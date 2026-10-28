@@ -1,0 +1,256 @@
+{% macro sim(t, tipo) %}
+      <div class="sim" data-token="{{ t.nombre }}" data-tipo="{{ tipo }}">
+        <div class="sim-fila">
+          <label class="sim-campo"><span>Simular una cadena</span>
+            <input type="text" class="sim-cadena" value="{{ t.ejemplo }}" spellcheck="false" autocomplete="off" maxlength="200"></label>
+          <button type="button" class="boton primario sim-iniciar">Simular</button>
+        </div>
+        <div class="sim-cinta" aria-live="polite"></div>
+        <div class="sim-ctl" hidden>
+          <button type="button" class="boton suave sim-ini" aria-label="Ir al inicio">⏮</button>
+          <button type="button" class="boton suave sim-ant" aria-label="Paso anterior">◀</button>
+          <button type="button" class="boton sim-play" aria-label="Reproducir">▶ Reproducir</button>
+          <button type="button" class="boton suave sim-sig" aria-label="Paso siguiente">▶|</button>
+          <button type="button" class="boton suave sim-fin" aria-label="Ir al final">⏭</button>
+          <span class="sim-cuenta"></span>
+        </div>
+        <p class="sim-texto" role="status"></p>
+      </div>
+{% endmacro %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compilador de Lenguaje Logístico | Olva Courier</title>
+<meta name="description" content="Analizador léxico de tramas logísticas de Olva Courier con autómatas finitos generados desde expresiones regulares.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<aside class="lado" id="lado">
+  <a class="marca" href="#caso" aria-label="Ir al inicio">
+    <span class="marca-texto"><strong>COMPILADOR</strong><small>Lenguaje logístico</small></span>
+  </a>
+  <nav class="menu" aria-label="Secciones">
+    <a href="#caso" data-seccion="caso" class="activo"><i>▶</i> Caso</a>
+    <a href="#entrada" data-seccion="entrada"><i>◇</i> Entrada</a>
+    <a href="#resultado" data-seccion="resultado"><i>✦</i> Resultado</a>
+    <a href="#lexico" data-seccion="lexico"><i>⬡</i> Reglas léxicas</a>
+    <a href="#automatas" data-seccion="automatas"><i>◈</i> Autómatas</a>
+  </nav>
+  <div class="lado-titulo">TOKENS</div>
+  <ul class="lista-tokens" id="lista-tokens">
+    {% for t in tokens %}
+    <li><button type="button" data-token="{{ t.nombre }}">{{ t.nombre }}</button></li>
+    {% endfor %}
+  </ul>
+  <label class="buscar-token">
+    <span class="sr">Buscar token</span>
+    <input type="search" id="buscar-token" placeholder="Buscar token" autocomplete="off">
+  </label>
+</aside>
+
+<main class="principal">
+
+  <!-- ===================== CASO ===================== -->
+  <section id="caso" class="tarjeta hero" aria-labelledby="titulo-caso">
+    <div class="hero-texto">
+      <span class="insignia">AVANCE 2 · ETAPAS 1 Y 2</span>
+      <h1 id="titulo-caso">Compilador de Lenguaje Logístico</h1>
+      <p class="sub">Olva Courier · Análisis léxico</p>
+      <p>El terminal de clasificación de Olva emite una trama codificada por cada paquete: una línea que nadie entiende a simple vista, con el código de envío, los datos del comprador y la dirección. Cuando un campo llega mal escrito, el envío se pierde, se devuelve o se retrasa.</p>
+      <p>Este compilador lee la trama carácter por carácter, la agrupa en lexemas y los clasifica en <strong>11 tokens</strong>. Cada token se reconoce con un autómata finito determinista construido a partir de su expresión regular.</p>
+      <ol class="fases" aria-label="Fases del compilador">
+        <li class="activa">Léxico</li>
+        <li>Sintáctico</li>
+        <li>Semántico</li>
+        <li>Traducción</li>
+      </ol>
+    </div>
+    <div class="proceso" aria-label="Dónde está el compilador">
+      <div class="paso">Terminal de clasificación<small>emite la trama</small></div>
+      <span class="flecha" aria-hidden="true">→</span>
+      <div class="paso destacado">Compilador<small>léxico · sintáctico · semántico</small></div>
+      <span class="flecha" aria-hidden="true">→</span>
+      <div class="paso">Sistema empresarial<small>SQL Server y reportería</small></div>
+    </div>
+  </section>
+
+  <!-- ===================== ENTRADA ===================== -->
+  <section id="entrada" class="tarjeta" aria-labelledby="titulo-entrada">
+    <h2 id="titulo-entrada" class="etiqueta">ENTRADA</h2>
+    <p class="ayuda">Carga un archivo .txt con tramas (una por línea) o escribe el código directamente.</p>
+
+    <label class="zona-carga" id="zona-carga" for="archivo">
+      <input type="file" id="archivo" accept=".txt,text/plain">
+      <span class="zona-icono" aria-hidden="true">⇪</span>
+      <span class="zona-texto"><strong>Cargar archivo .txt</strong><small id="nombre-archivo">Arrastra el archivo aquí o haz clic para elegirlo</small></span>
+    </label>
+
+    <label class="campo-texto" for="codigo">Código de entrada</label>
+    <textarea id="codigo" spellcheck="false" rows="9" wrap="off">{{ ejemplo }}</textarea>
+
+    <div class="acciones">
+      <button type="button" class="boton primario" id="compilar"><span aria-hidden="true">▶</span> Compilar</button>
+      <button type="button" class="boton" data-ejemplo="tramas_100.txt">Ejemplo de 100 tramas</button>
+      <button type="button" class="boton" data-ejemplo="tramas_con_errores.txt">Ejemplo con errores</button>
+      <button type="button" class="boton suave" id="limpiar">Limpiar</button>
+    </div>
+    <p class="mensaje" id="mensaje" role="status" aria-live="polite"></p>
+
+    <h3 class="subetiqueta">Formato esperado</h3>
+    <div class="formato">
+      <pre class="trama-modelo" aria-label="Trama de ejemplo">{% for seg in trama_modelo %}<span class="c{{ loop.index0 }}" title="{{ campos[loop.index0].titulo }}">{{ seg }}</span>{% if not loop.last %}<b>|</b>{% endif %}{% endfor %}</pre>
+      <div class="tabla-simple">
+        <table>
+          <thead><tr><th>Campo</th><th>Token</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+          {% for c in campos %}
+            <tr>
+              <td><span class="punto c{{ loop.index0 }}"></span>{{ c.titulo }}</td>
+              <td>{{ c.tokens | join(', ') }}</td>
+              <td><code>{{ c.ejemplo }}</code></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RESULTADO ===================== -->
+  <section id="resultado" class="tarjeta" aria-labelledby="titulo-resultado">
+    <h2 id="titulo-resultado" class="etiqueta">RESULTADO</h2>
+    <div id="vacio" class="vacio">
+      <p>Aún no hay resultados. Pulsa <strong>Compilar</strong> para obtener los tokens y lexemas de cada trama.</p>
+    </div>
+
+    <div id="resultados" hidden>
+      <div class="datos" id="datos"></div>
+
+      <h3 class="subetiqueta">Reconocimiento por token</h3>
+      <div class="por-token" id="por-token"></div>
+
+      <h3 class="subetiqueta">Tokens y lexemas por trama</h3>
+      <div class="controles">
+        <div class="filtros" role="group" aria-label="Filtrar tramas">
+          <button type="button" class="chip activo" data-filtro="todas">Todas</button>
+          <button type="button" class="chip" data-filtro="validas">Válidas</button>
+          <button type="button" class="chip" data-filtro="errores">Con errores</button>
+        </div>
+        <input type="search" id="buscar-trama" class="buscador" placeholder="Buscar por código, comprador o distrito" autocomplete="off" aria-label="Buscar trama">
+        <button type="button" class="boton suave" id="csv">Descargar CSV</button>
+      </div>
+      <div class="lista-tramas" id="lista-tramas"></div>
+      <div class="paginador" id="paginador"></div>
+    </div>
+  </section>
+
+  <!-- ===================== REGLAS LÉXICAS ===================== -->
+  <section id="lexico" class="tarjeta" aria-labelledby="titulo-lexico">
+    <h2 id="titulo-lexico" class="etiqueta">ANÁLISIS LÉXICO · REGLAS</h2>
+    <p class="ayuda">Cada token se define con una expresión regular. De ella salen su AFND, su AFD, su tabla y su quíntupla.</p>
+    <div class="tabla-simple ancha">
+      <table>
+        <thead><tr><th>Token (agrupador)</th><th>Lexema de ejemplo</th><th>Expresión regular</th><th>Qué reconoce</th></tr></thead>
+        <tbody>
+        {% for t in tokens %}
+          <tr>
+            <td><button type="button" class="enlace-token" data-token="{{ t.nombre }}">{{ t.nombre }}</button></td>
+            <td><code>{{ t.ejemplo }}</code></td>
+            <td><code class="er">{{ t.er }}</code></td>
+            <td>{{ t.desc }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== AUTÓMATAS ===================== -->
+  <section id="automatas" class="tarjeta" aria-labelledby="titulo-automatas">
+    <h2 id="titulo-automatas" class="etiqueta">AUTÓMATAS POR TOKEN</h2>
+    <p class="ayuda">Elige un token. Los dibujos se generan desde el código fuente a partir de la expresión regular.</p>
+    <div class="pildoras" id="pildoras" role="tablist" aria-label="Tokens">
+      {% for t in tokens %}
+      <button type="button" role="tab" class="pildora{% if loop.first %} activo{% endif %}" data-token="{{ t.nombre }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ t.nombre }}</button>
+      {% endfor %}
+    </div>
+
+    {% for t in tokens %}
+    <article class="panel-token" data-panel="{{ t.nombre }}" role="tabpanel" {% if not loop.first %}hidden{% endif %}>
+      <header class="panel-cab">
+        <h3>{{ t.nombre }}</h3>
+        <code class="er grande">{{ t.er }}</code>
+        <p>{{ t.desc }}</p>
+        <ul class="insignias">
+          <li>AFND: {{ t.afnd_n }} estados, {{ t.afnd_eps }} transiciones ε</li>
+          <li>AFD: {{ t.afd_n }} estados</li>
+          <li>Σ tiene {{ t.sigma | length }} símbolos</li>
+        </ul>
+      </header>
+
+      <h4 class="subetiqueta">1. AFND (Thompson, con transiciones ε)</h4>
+      <div class="lienzo">{{ t.svg_afnd | safe }}</div>
+      {{ sim(t, "afnd") }}
+
+      <h4 class="subetiqueta">2. AFD (construcción de subconjuntos)</h4>
+      <div class="lienzo">{{ t.svg_afd | safe }}</div>
+      {{ sim(t, "afd") }}
+      <p class="nota">Si un símbolo no aparece en una transición, el AFD pasa a un estado de error que no se dibuja.</p>
+
+      <h4 class="subetiqueta">3. Tabla de transiciones del AFD</h4>
+      <div class="tabla-simple tabla-delta">
+        <table>
+          <thead>
+            <tr><th>Estado</th>{% for col in t.tabla.columnas %}<th>{{ col }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+          {% for fila in t.tabla.filas %}
+            <tr class="{{ 'final' if fila.final }}">
+              <td class="estado">{{ '→ ' if fila.inicial }}{{ fila.estado }}{{ ' *' if fila.final }}</td>
+              {% for celda in fila.celdas %}<td>{{ celda or '∅' }}</td>{% endfor %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="nota">→ estado inicial, * estado de aceptación, ∅ sin transición (estado de error).</p>
+
+      <h4 class="subetiqueta">4. Transiciones</h4>
+      <details class="transiciones">
+        <summary>Ver las {{ t.transiciones | length }} transiciones δ</summary>
+        <ul>{% for tr in t.transiciones %}<li><code>{{ tr }}</code></li>{% endfor %}</ul>
+      </details>
+
+      <h4 class="subetiqueta">5. Quíntupla del AFD</h4>
+      <div class="quintupla">
+        <p><span class="sim">M</span> = (Q, Σ, δ, q0, F)</p>
+        <p><span class="sim">Q</span> = {{ '{' }}{{ t.quintupla.Q | join(', ') }}{{ '}' }}</p>
+        <p><span class="sim">Σ</span> = {{ '{' }}{{ t.quintupla.sigma | join(', ') }}{{ '}' }}</p>
+        <p><span class="sim">δ</span> = definida por la tabla de transiciones</p>
+        <p><span class="sim">q0</span> = {{ t.quintupla.q0 }}</p>
+        <p><span class="sim">F</span> = {{ '{' }}{{ t.quintupla.F | join(', ') }}{{ '}' }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+
+
+</main>
+
+<footer class="barra">
+  <span class="barra-usuario"><i aria-hidden="true">U</i> Lenguajes Formales y Compiladores · USIL</span>
+  <span class="barra-der">Avance 2 · Etapas 1 y 2</span>
+</footer>
+
+<script>
+  window.CAMPOS = {{ campos | tojson }};
+</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
