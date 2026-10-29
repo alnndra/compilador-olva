@@ -290,55 +290,69 @@
     return nt("LOTE", [nt("TRAMA", trama), nt("RESTO", [{ tipo: "eps", label: "ε", ok: true }])]);
   }
 
+  var K_TOKEN = { CODIGO_ENVIO: 0, NOMBRE: 1, DNI: 2, TELEFONO: 3, CORREO: 4, TIPO_VIA: 5, NOMBRE_VIA: 5, NUMERO: 5,
+                  INTERIOR: 6, UBIGEO: 7, FECHA: 8 };
+  var K_GRUPO = { ENVIO: 0, COMPRADOR: 1, DIRECCION: 5, VIA: 5, ENTREGA: 8 };
+
   function arbolSVG(t) {
-    var raiz = arbolDe(t), cursor = 20, FONDO = 4, DY = 66, hojas = [], nodos = [];
-    function ancho(n) { return n.tipo === "tok" ? 112 : n.tipo === "eps" ? 44 : 32; }
+    var raiz = arbolDe(t), cursor = 24, FONDO = 4, DY = 72, nodos = [];
+    function ancho(n) { return n.tipo === "tok" ? 118 : n.tipo === "eps" ? 46 : 34; }
     function colocar(n, d) {
       n.d = d; nodos.push(n);
-      if (!n.hijos) { n.x = cursor + ancho(n) / 2; cursor += ancho(n); hojas.push(n); return; }
+      if (!n.hijos) { n.x = cursor + ancho(n) / 2; cursor += ancho(n); return; }
       n.hijos.forEach(function (h) { colocar(h, d + 1); });
       n.x = (n.hijos[0].x + n.hijos[n.hijos.length - 1].x) / 2;
       n.ok = n.hijos.every(function (h) { return h.ok; });
     }
     colocar(raiz, 0);
-    var LIN = 14, maxLin = 1;
+    var LIN = 14, maxLin = 1, YB = 40 + FONDO * DY;
     nodos.forEach(function (n) {
-      n.y = (n.tipo === "tok" || n.fondo) ? 34 + FONDO * DY : 34 + n.d * DY;
+      n.y = (n.tipo === "tok" || n.fondo) ? YB : 40 + n.d * DY;
       if (n.tipo === "tok") {
         var l = []; for (var i = 0; i < n.lex.length; i += 14) l.push(n.lex.slice(i, i + 14));
         if (l.length > 4) { l = l.slice(0, 4); l[3] = l[3].slice(0, 13) + "…"; }
         n.lineas = l; maxLin = Math.max(maxLin, l.length);
       }
     });
-    var W = cursor + 20, H = 34 + FONDO * DY + 34 + maxLin * LIN;
+    var W = cursor + 24, H = YB + 40 + maxLin * LIN + 16;
+    var defs = '<defs><linearGradient id="ar-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a1707b"/>' +
+      '<stop offset="1" stop-color="#5d3647"/></linearGradient>' +
+      '<filter id="ar-sombra" x="-20%" y="-30%" width="140%" height="180%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#5d3647" flood-opacity=".28"/></filter></defs>';
     var aristas = "", cajas = "";
     nodos.forEach(function (n) {
       if (!n.hijos) return;
       n.hijos.forEach(function (h) {
-        aristas += '<line class="ar-linea" x1="' + n.x.toFixed(1) + '" y1="' + (n.y + 14) + '" x2="' + h.x.toFixed(1) + '" y2="' + (h.y - 13) + '"/>';
+        var y1 = n.y + 15, y2 = h.y - 14, m = (y1 + y2) / 2;
+        aristas += '<path class="ar-linea" d="M' + n.x.toFixed(1) + " " + y1 + " C" + n.x.toFixed(1) + " " + m + " " + h.x.toFixed(1) + " " + m + " " + h.x.toFixed(1) + " " + y2 + '"/>';
       });
     });
     nodos.forEach(function (n) {
       var x = n.x.toFixed(1), y = n.y;
       if (n.tipo === "nt") {
-        var w = n.label.length * 8.4 + 26;
-        cajas += '<g class="ar-nt' + (n.ok ? "" : " mal") + '"><rect x="' + (n.x - w / 2).toFixed(1) + '" y="' + (y - 14) + '" width="' + w.toFixed(1) +
-          '" height="28" rx="14"/><text x="' + x + '" y="' + (y + 4) + '">' + esc(n.label) + "</text></g>";
+        var w = n.label.length * 9 + 30;
+        var cls = n.label === "LOTE" || n.label === "TRAMA" ? "ar-raiz" : n.label === "RESTO" ? "ar-resto" :
+          "ar-grupo k" + K_GRUPO[n.label] + (n.label === "VIA" ? " sub" : "");
+        cajas += '<g class="ar-nt ' + cls + (n.ok ? "" : " mal") + '"><rect x="' + (n.x - w / 2).toFixed(1) + '" y="' + (y - 15) + '" width="' + w.toFixed(1) +
+          '" height="30" rx="15"/><text x="' + x + '" y="' + (y + 4.5) + '">' + esc(n.label) + "</text></g>";
       } else if (n.tipo === "tok") {
-        cajas += '<g class="ar-tok' + (n.ok ? "" : " mal") + '"><title>' + esc(n.label + (n.error ? ": " + n.error : "")) + '</title><rect x="' + (n.x - 52).toFixed(1) +
-          '" y="' + (y - 13) + '" width="104" height="26" rx="8"/><text class="ar-et" x="' + x + '" y="' + (y + 4) + '">' + esc(n.label) + "</text>";
+        var k = K_TOKEN[n.label];
+        var alto = n.lineas.length * LIN + 10;
+        cajas += '<g class="ar-tok' + (k != null ? " k" + k : "") + (n.ok ? "" : " mal") + '"><title>' + esc(n.label + (n.error ? ": " + n.error : "")) +
+          '</title><rect class="ar-caja" x="' + (n.x - 54).toFixed(1) + '" y="' + (y - 14) + '" width="108" height="28" rx="9"/>' +
+          '<text class="ar-et" x="' + x + '" y="' + (y + 4) + '">' + esc(n.label) + "</text>" +
+          '<rect class="ar-lexbox" x="' + (n.x - 54).toFixed(1) + '" y="' + (y + 22) + '" width="108" height="' + alto + '" rx="8"/>';
         n.lineas.forEach(function (l, i) {
-          cajas += '<text class="ar-lex" x="' + x + '" y="' + (y + 30 + i * LIN) + '">' + esc(l) + "</text>";
+          cajas += '<text class="ar-lex" x="' + x + '" y="' + (y + 22 + 15 + i * LIN) + '">' + esc(l) + "</text>";
         });
         cajas += "</g>";
       } else if (n.tipo === "term") {
-        cajas += '<g class="ar-term"><rect x="' + (n.x - 11).toFixed(1) + '" y="' + (y - 12) + '" width="22" height="24" rx="6"/><text x="' + x + '" y="' + (y + 5) + '">' + esc(n.label) + "</text></g>";
+        cajas += '<g class="ar-term"><circle cx="' + x + '" cy="' + y + '" r="13"/><text x="' + x + '" y="' + (y + 5) + '">' + esc(n.label) + "</text></g>";
       } else {
-        cajas += '<g class="ar-eps"><circle cx="' + x + '" cy="' + y + '" r="14"/><text x="' + x + '" y="' + (y + 5) + '">ε</text></g>';
+        cajas += '<g class="ar-eps"><circle cx="' + x + '" cy="' + y + '" r="15"/><text x="' + x + '" y="' + (y + 5) + '">ε</text></g>';
       }
     });
     return '<svg class="arbolsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H +
-      '" role="img" aria-label="Árbol sintáctico de la trama ' + t.n + '">' + aristas + cajas + "</svg>";
+      '" role="img" aria-label="Árbol sintáctico de la trama ' + t.n + '">' + defs + aristas + cajas + "</svg>";
   }
 
   function arbolCaja(t) {

@@ -269,18 +269,6 @@ details.trama summary:focus-visible { outline: 3px solid var(--oro); outline-off
 .gramatica { margin-top: 8px; }
 .gramatica summary { cursor: pointer; font-weight: 700; font-size: .85rem; color: var(--suave); }
 .gramatica pre { margin: 8px 0 0; padding: 10px 14px; background: rgba(74,45,61,.07); border-radius: 10px; font-size: .78rem; overflow-x: auto; }
-.arbolsvg { display: block; margin: 0 auto; max-width: none; }
-.arbolsvg .ar-linea { stroke: var(--suave); stroke-width: 1.5; }
-.arbolsvg .ar-nt rect { fill: var(--oro-suave); stroke: var(--ciruela); stroke-width: 1.6; }
-.arbolsvg .ar-nt text { font: 700 12px var(--fuente); text-anchor: middle; fill: var(--ciruela); }
-.arbolsvg .ar-tok rect { fill: var(--oro); stroke: var(--ciruela); stroke-width: 1.6; }
-.arbolsvg .ar-et { font: 700 10.5px var(--mono); text-anchor: middle; fill: var(--ciruela); }
-.arbolsvg .ar-lex { font: 600 11px var(--mono); text-anchor: middle; fill: var(--ciruela); }
-.arbolsvg .ar-term rect { fill: var(--tarjeta-hi); stroke: var(--ciruela); stroke-width: 1.4; }
-.arbolsvg .ar-term text, .arbolsvg .ar-eps text { font: 700 13px var(--mono); text-anchor: middle; fill: var(--ciruela); }
-.arbolsvg .ar-eps circle { fill: var(--tarjeta-hi); stroke: var(--ciruela); stroke-width: 1.4; }
-.arbolsvg .ar-nt.mal rect, .arbolsvg .ar-tok.mal rect { fill: #f0c4c4; stroke: var(--mal); stroke-width: 2; }
-.arbolsvg .ar-tok.mal .ar-lex { fill: var(--mal); }
 
 /* ---------- Barra inferior ---------- */
 .barra {
@@ -321,3 +309,37 @@ details.trama .arbol-caja > summary, details.trama .gramatica > summary { displa
 .arbol-caja > summary { color: var(--ciruela); }
 .arbol-ajustar { padding: 5px 14px; font-size: .8rem; margin-top: 8px; }
 .arbol.ajustado .arbolsvg { width: 100%; height: auto; }
+
+.arbol { background-color: #fbf4ea; background-image: radial-gradient(circle, var(--punto) 1px, transparent 1.5px); background-size: 20px 20px; }
+.arbolsvg { display: block; margin: 0 auto; max-width: none; }
+.arbolsvg .ar-linea { fill: none; stroke: var(--rosa-2); stroke-width: 2; stroke-linecap: round; }
+.arbolsvg .ar-nt rect, .arbolsvg .ar-tok .ar-caja, .arbolsvg .ar-term circle, .arbolsvg .ar-eps circle { filter: url(#ar-sombra); }
+.arbolsvg .ar-nt text { font: 700 13px var(--fuente); text-anchor: middle; fill: var(--ciruela); letter-spacing: .03em; }
+.arbolsvg .ar-raiz rect { fill: url(#ar-grad); stroke: var(--vino-2); stroke-width: 1.5; }
+.arbolsvg .ar-raiz text { fill: #fff; letter-spacing: .1em; }
+.arbolsvg .ar-resto rect { fill: var(--rosa-2); stroke: var(--vino-2); stroke-width: 1.5; }
+.arbolsvg .ar-grupo rect { stroke: var(--ciruela); stroke-width: 1.8; }
+.arbolsvg .ar-grupo.sub rect { stroke-width: 1.2; stroke-dasharray: 4 2; }
+.arbolsvg .ar-tok .ar-caja { stroke: rgba(74,45,61,.55); stroke-width: 1.3; }
+.arbolsvg .ar-et { font: 700 10.5px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-lexbox { fill: #fffaf3; stroke: var(--linea); stroke-width: 1.2; }
+.arbolsvg .ar-lex { font: 600 11px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-term circle { fill: var(--oro-suave); stroke: #b8892a; stroke-width: 1.4; }
+.arbolsvg .ar-term text { font: 700 14px var(--mono); text-anchor: middle; fill: #5d4208; }
+.arbolsvg .ar-eps circle { fill: var(--tarjeta-hi); stroke: var(--vino-2); stroke-width: 1.4; stroke-dasharray: 3 2; }
+.arbolsvg .ar-eps text { font: 700 14px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-nt.mal rect, .arbolsvg .ar-tok.mal .ar-caja { fill: #f0b4b4; stroke: var(--mal); stroke-width: 2; stroke-dasharray: none; }
+.arbolsvg .ar-nt.mal text { fill: #7a1f27; }
+.arbolsvg .ar-tok.mal .ar-lexbox { fill: #fdeaea; stroke: var(--mal); }
+.arbolsvg .ar-tok.mal .ar-lex { fill: var(--mal); }
+.arbolsvg .ar-tok.k0 .ar-caja, .arbolsvg .ar-grupo.k0 rect { fill: #f2c96b; }
+.arbolsvg .ar-tok.k1 .ar-caja, .arbolsvg .ar-grupo.k1 rect { fill: #d6aea6; }
+.arbolsvg .ar-tok.k2 .ar-caja, .arbolsvg .ar-grupo.k2 rect { fill: #c3d0ae; }
+.arbolsvg .ar-tok.k3 .ar-caja, .arbolsvg .ar-grupo.k3 rect { fill: #adc6d3; }
+.arbolsvg .ar-tok.k4 .ar-caja, .arbolsvg .ar-grupo.k4 rect { fill: #dcbbd6; }
+.arbolsvg .ar-tok.k5 .ar-caja, .arbolsvg .ar-grupo.k5 rect { fill: #eab98c; }
+.arbolsvg .ar-tok.k6 .ar-caja, .arbolsvg .ar-grupo.k6 rect { fill: #d3c6a3; }
+.arbolsvg .ar-tok.k7 .ar-caja, .arbolsvg .ar-grupo.k7 rect { fill: #c5b4da; }
+.arbolsvg .ar-tok.k8 .ar-caja, .arbolsvg .ar-grupo.k8 rect { fill: #aed1c2; }
+.arbolsvg .ar-grupo.sub rect { fill-opacity: .8; }
+.arbolsvg .ar-nt.mal rect, .arbolsvg .ar-tok.mal .ar-caja { fill: #f0b4b4; stroke: var(--mal); stroke-width: 2.2; stroke-dasharray: none; fill-opacity: 1; }
