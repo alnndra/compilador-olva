@@ -238,7 +238,7 @@ details.trama summary:focus-visible { outline: 3px solid var(--oro); outline-off
 .sim { font-weight: 700; color: var(--boton); }
 
 /* ---------- Simulación ---------- */
-.sim { margin-top: 10px; background: rgba(255,255,255,.5); border-radius: 16px; padding: 12px 14px; border-left: 5px solid var(--oro); }
+.simulador { margin-top: 10px; background: rgba(255,255,255,.5); border-radius: 16px; padding: 12px 14px; border-left: 5px solid var(--oro); }
 .sim-fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .sim-campo { flex: 1 1 260px; display: grid; gap: 4px; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--suave); }
 .sim-cadena { width: 100%; padding: 9px 14px; border-radius: 12px; border: 2px solid var(--linea); background: #fbf4ea; color: var(--ciruela); font-family: var(--mono); font-size: .85rem; letter-spacing: 0; text-transform: none; }
@@ -261,6 +261,26 @@ details.trama summary:focus-visible { outline: 3px solid var(--oro); outline-off
 .autosvg .nodo.activo.fallo circle:first-child { fill: #f0b4b4; stroke: var(--mal); }
 .autosvg .edge.usada { stroke: #c27a00; stroke-width: 3.4; }
 .autosvg .elabel.usada { fill: #8a5a00; font-weight: 700; }
+
+/* ---------- Árbol sintáctico ---------- */
+.arbol-caja { margin-top: 12px; background: rgba(255,255,255,.45); border-radius: 14px; padding: 10px 14px; }
+.arbol-caja > summary { cursor: pointer; font-weight: 700; }
+.arbol-caja .lienzo { margin-top: 10px; }
+.gramatica { margin-top: 8px; }
+.gramatica summary { cursor: pointer; font-weight: 700; font-size: .85rem; color: var(--suave); }
+.gramatica pre { margin: 8px 0 0; padding: 10px 14px; background: rgba(74,45,61,.07); border-radius: 10px; font-size: .78rem; overflow-x: auto; }
+.arbolsvg { display: block; margin: 0 auto; max-width: none; }
+.arbolsvg .ar-linea { stroke: var(--suave); stroke-width: 1.5; }
+.arbolsvg .ar-nt rect { fill: var(--oro-suave); stroke: var(--ciruela); stroke-width: 1.6; }
+.arbolsvg .ar-nt text { font: 700 12px var(--fuente); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-tok rect { fill: var(--oro); stroke: var(--ciruela); stroke-width: 1.6; }
+.arbolsvg .ar-et { font: 700 10.5px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-lex { font: 600 11px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-term rect { fill: var(--tarjeta-hi); stroke: var(--ciruela); stroke-width: 1.4; }
+.arbolsvg .ar-term text, .arbolsvg .ar-eps text { font: 700 13px var(--mono); text-anchor: middle; fill: var(--ciruela); }
+.arbolsvg .ar-eps circle { fill: var(--tarjeta-hi); stroke: var(--ciruela); stroke-width: 1.4; }
+.arbolsvg .ar-nt.mal rect, .arbolsvg .ar-tok.mal rect { fill: #f0c4c4; stroke: var(--mal); stroke-width: 2; }
+.arbolsvg .ar-tok.mal .ar-lex { fill: var(--mal); }
 
 /* ---------- Barra inferior ---------- */
 .barra {
@@ -297,3 +317,7 @@ details.trama summary:focus-visible { outline: 3px solid var(--oro); outline-off
 .tarjeta, .hero-texto { min-width: 0; }
 html, body { overflow-x: hidden; }
 .formato, .tabla-simple { max-width: 100%; }
+details.trama .arbol-caja > summary, details.trama .gramatica > summary { display: block; padding: 0; font-size: .9rem; }
+.arbol-caja > summary { color: var(--ciruela); }
+.arbol-ajustar { padding: 5px 14px; font-size: .8rem; margin-top: 8px; }
+.arbol.ajustado .arbolsvg { width: 100%; height: auto; }

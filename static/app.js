@@ -128,7 +128,7 @@
     $(".sim-fin", box).addEventListener("click", function () { parar(); ir(sim.pasos.length - 1); });
     play.addEventListener("click", reproducir);
   }
-  $$(".sim").forEach(iniciarSim);
+  $$(".simulador").forEach(iniciarSim);
 
   /* ---------- Entrada ---------- */
   var area = $("#codigo");
@@ -257,6 +257,98 @@
     }).join("<b>|</b>");
   }
 
+  /* ---------- Árbol sintáctico ---------- */
+  var GRAMATICA = [
+    "LOTE      → TRAMA RESTO",
+    "RESTO     → salto TRAMA RESTO | ε",
+    "TRAMA     → ENVIO | COMPRADOR | DIRECCION | ENTREGA",
+    "ENVIO     → CODIGO_ENVIO",
+    "COMPRADOR → NOMBRE | DNI | TELEFONO | CORREO",
+    "DIRECCION → VIA | INTERIOR | UBIGEO",
+    "VIA       → TIPO_VIA * NOMBRE_VIA NUMERO",
+    "ENTREGA   → FECHA"
+  ].join("\n");
+
+  function arbolDe(t) {
+    var tk = {};
+    t.tokens.forEach(function (k) { tk[k.token] = k; });
+    function tok(nombre) {
+      var k = tk[nombre] || { lexema: "", ok: false, error: "Falta este campo." };
+      return { tipo: "tok", label: nombre, lex: k.lexema || "(falta)", ok: !!k.ok, error: k.error || "" };
+    }
+    function nt(label, hijos) { return { tipo: "nt", label: label, hijos: hijos }; }
+    function term(sim, fondo) { return { tipo: "term", label: sim, fondo: !!fondo, ok: true }; }
+    var trama = [
+      nt("ENVIO", [tok("CODIGO_ENVIO")]), term("|"),
+      nt("COMPRADOR", [tok("NOMBRE"), term("|", 1), tok("DNI"), term("|", 1), tok("TELEFONO"), term("|", 1), tok("CORREO")]), term("|"),
+      nt("DIRECCION", [nt("VIA", [tok("TIPO_VIA"), term("*", 1), tok("NOMBRE_VIA"), tok("NUMERO")]),
+        term("|", 1), tok("INTERIOR"), term("|", 1), tok("UBIGEO")]), term("|"),
+      nt("ENTREGA", [tok("FECHA")])
+    ];
+    var sobra = t.tokens.filter(function (k) { return k.token === "SOBRANTE"; })[0];
+    if (sobra) trama.push({ tipo: "tok", label: "SOBRANTE", lex: sobra.lexema, ok: false, error: sobra.error });
+    return nt("LOTE", [nt("TRAMA", trama), nt("RESTO", [{ tipo: "eps", label: "ε", ok: true }])]);
+  }
+
+  function arbolSVG(t) {
+    var raiz = arbolDe(t), cursor = 20, FONDO = 4, DY = 66, hojas = [], nodos = [];
+    function ancho(n) { return n.tipo === "tok" ? 112 : n.tipo === "eps" ? 44 : 32; }
+    function colocar(n, d) {
+      n.d = d; nodos.push(n);
+      if (!n.hijos) { n.x = cursor + ancho(n) / 2; cursor += ancho(n); hojas.push(n); return; }
+      n.hijos.forEach(function (h) { colocar(h, d + 1); });
+      n.x = (n.hijos[0].x + n.hijos[n.hijos.length - 1].x) / 2;
+      n.ok = n.hijos.every(function (h) { return h.ok; });
+    }
+    colocar(raiz, 0);
+    var LIN = 14, maxLin = 1;
+    nodos.forEach(function (n) {
+      n.y = (n.tipo === "tok" || n.fondo) ? 34 + FONDO * DY : 34 + n.d * DY;
+      if (n.tipo === "tok") {
+        var l = []; for (var i = 0; i < n.lex.length; i += 14) l.push(n.lex.slice(i, i + 14));
+        if (l.length > 4) { l = l.slice(0, 4); l[3] = l[3].slice(0, 13) + "…"; }
+        n.lineas = l; maxLin = Math.max(maxLin, l.length);
+      }
+    });
+    var W = cursor + 20, H = 34 + FONDO * DY + 34 + maxLin * LIN;
+    var aristas = "", cajas = "";
+    nodos.forEach(function (n) {
+      if (!n.hijos) return;
+      n.hijos.forEach(function (h) {
+        aristas += '<line class="ar-linea" x1="' + n.x.toFixed(1) + '" y1="' + (n.y + 14) + '" x2="' + h.x.toFixed(1) + '" y2="' + (h.y - 13) + '"/>';
+      });
+    });
+    nodos.forEach(function (n) {
+      var x = n.x.toFixed(1), y = n.y;
+      if (n.tipo === "nt") {
+        var w = n.label.length * 8.4 + 26;
+        cajas += '<g class="ar-nt' + (n.ok ? "" : " mal") + '"><rect x="' + (n.x - w / 2).toFixed(1) + '" y="' + (y - 14) + '" width="' + w.toFixed(1) +
+          '" height="28" rx="14"/><text x="' + x + '" y="' + (y + 4) + '">' + esc(n.label) + "</text></g>";
+      } else if (n.tipo === "tok") {
+        cajas += '<g class="ar-tok' + (n.ok ? "" : " mal") + '"><title>' + esc(n.label + (n.error ? ": " + n.error : "")) + '</title><rect x="' + (n.x - 52).toFixed(1) +
+          '" y="' + (y - 13) + '" width="104" height="26" rx="8"/><text class="ar-et" x="' + x + '" y="' + (y + 4) + '">' + esc(n.label) + "</text>";
+        n.lineas.forEach(function (l, i) {
+          cajas += '<text class="ar-lex" x="' + x + '" y="' + (y + 30 + i * LIN) + '">' + esc(l) + "</text>";
+        });
+        cajas += "</g>";
+      } else if (n.tipo === "term") {
+        cajas += '<g class="ar-term"><rect x="' + (n.x - 11).toFixed(1) + '" y="' + (y - 12) + '" width="22" height="24" rx="6"/><text x="' + x + '" y="' + (y + 5) + '">' + esc(n.label) + "</text></g>";
+      } else {
+        cajas += '<g class="ar-eps"><circle cx="' + x + '" cy="' + y + '" r="14"/><text x="' + x + '" y="' + (y + 5) + '">ε</text></g>';
+      }
+    });
+    return '<svg class="arbolsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H +
+      '" role="img" aria-label="Árbol sintáctico de la trama ' + t.n + '">' + aristas + cajas + "</svg>";
+  }
+
+  function arbolCaja(t) {
+    return '<details class="arbol-caja" data-n="' + t.n + '"><summary>Ver árbol sintáctico</summary>' +
+      '<button type="button" class="boton suave arbol-ajustar">Ajustar al ancho</button>' +
+      '<div class="lienzo arbol"></div>' +
+      '<p class="nota">Desliza horizontalmente si el árbol no cabe. Los nodos en rojo marcan dónde falló el análisis léxico.</p>' +
+      '<details class="gramatica"><summary>Ver gramática</summary><pre>' + esc(GRAMATICA) + "</pre></details></details>";
+  }
+
   function detalle(t) {
     var filas = t.tokens.map(function (k) {
       return '<tr class="' + (k.ok ? "" : "fallo") + '"><td>' + esc(k.token) + "</td><td><code>" + esc(k.lexema) + "</code></td>" +
@@ -266,7 +358,7 @@
     }).join("");
     return '<div class="detalle"><p class="raw">' + rawColoreado(t) + "</p>" +
       '<div class="tabla-simple"><table><thead><tr><th>Token</th><th>Lexema</th><th>Valor</th><th>Estado</th></tr></thead><tbody>' +
-      filas + "</tbody></table></div></div>";
+      filas + "</tbody></table></div>" + arbolCaja(t) + "</div>";
   }
 
   function pintarLista() {
@@ -312,6 +404,24 @@
     });
   });
   $("#buscar-trama").addEventListener("input", function (e) { estado.q = e.target.value.trim(); estado.pag = 1; pintarLista(); });
+
+  $("#lista-tramas").addEventListener("toggle", function (e) {
+    var d = e.target;
+    if (!d.classList || !d.classList.contains("arbol-caja") || !d.open) return;
+    var cont = $(".arbol", d);
+    if (cont.firstChild) return;
+    var n = parseInt(d.dataset.n, 10);
+    var t = estado.data.tramas.filter(function (x) { return x.n === n; })[0];
+    if (t) cont.innerHTML = arbolSVG(t);
+  }, true);
+
+  $("#lista-tramas").addEventListener("click", function (e) {
+    var bt = e.target.closest(".arbol-ajustar");
+    if (!bt) return;
+    var lienzo = $(".arbol", bt.parentNode);
+    var aj = lienzo.classList.toggle("ajustado");
+    bt.textContent = aj ? "Tamaño real" : "Ajustar al ancho";
+  });
 
   /* ---------- CSV ---------- */
   $("#csv").addEventListener("click", function () {
